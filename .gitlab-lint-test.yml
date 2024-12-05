@@ -1,0 +1,37 @@
+### Caching of Go modules and dependencies
+.go-cache:
+  variables:
+    GOPATH: $CI_PROJECT_DIR/.go
+  cache:
+    paths:
+      # Caching directory
+      - .go/pkg/mod/
+
+
+### Lint
+lint:
+  image: golangci/golangci-lint:latest
+  stage: lint
+  extends: .go-cache
+  script:
+    # Navigate to the Go source directory
+    - cd golang-source-code
+    # Initialize the Go module environment
+    - go mod tidy
+    # Run golangci-lint in verbose mode
+    - golangci-lint run -v .
+
+
+### Test
+test:
+  image: golang:latest  # Official Go image
+  stage: test
+  script:
+    # Navigate to the Go source directory
+    - cd golang-source-code
+    # Format Go code
+    - go fmt $(go list ./...)
+    # Analyze Go code for potential issues
+    - go vet $(go list ./...)
+    # Run tests and detect race conditions
+    - go test -race $(go list ./...)
